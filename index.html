@@ -13,6 +13,11 @@
       height: 100vh;
       background-color: #f2f2f2;
       margin: 0;
+      flex-direction: column;
+    }
+    #score, #best-score {
+      font-size: 24px;
+      margin-bottom: 10px;
     }
     .game-container {
       width: 400px;
@@ -24,6 +29,7 @@
       grid-template-rows: repeat(4, 1fr);
       gap: 10px;
       padding: 10px;
+      position: relative;
     }
     .tile {
       background-color: #ccc0b4;
@@ -34,6 +40,7 @@
       font-size: 36px;
       font-weight: bold;
       color: #776e65;
+      transition: transform 0.2s ease-in-out;
     }
     .tile-2 { background-color: #eee4da; }
     .tile-4 { background-color: #ede0c8; }
@@ -49,18 +56,32 @@
     .tile-2, .tile-4 { color: #776e65; }
     .tile-8, .tile-16, .tile-32, .tile-64 { color: #f9f6f2; }
     .tile-128, .tile-256, .tile-512, .tile-1024, .tile-2048 { color: #f9f6f2; }
+    .merge {
+      animation: merge 0.2s ease-in-out;
+    }
+    @keyframes merge {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
   </style>
 </head>
 <body>
 
+<div id="score">Score: 0</div>
+<div id="best-score">Best Score: 0</div>
+<button id="reset-button">Reset Game</button>
 <div class="game-container" id="game-board"></div>
 
 <script>
   const boardSize = 4;
   const board = [];
   const gameBoard = document.getElementById('game-board');
+  let score = 0;
+  let bestScore = localStorage.getItem('bestScore') || 0;
 
-  // Initialize the game board
+  document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
+
   function initializeBoard() {
     for (let i = 0; i < boardSize; i++) {
       board[i] = [];
@@ -73,7 +94,6 @@
     renderBoard();
   }
 
-  // Add a random tile to the board
   function addRandomTile() {
     const emptyCells = [];
     for (let i = 0; i < boardSize; i++) {
@@ -89,7 +109,6 @@
     }
   }
 
-  // Render the game board
   function renderBoard() {
     gameBoard.innerHTML = '';
     for (let i = 0; i < boardSize; i++) {
@@ -105,7 +124,34 @@
     }
   }
 
-  // Move tiles in a given direction
+  function updateScore(amount) {
+    score += amount;
+    document.getElementById('score').textContent = `Score: ${score}`;
+  }
+
+  function updateBestScore() {
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('bestScore', bestScore);
+      document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
+    }
+  }
+
+  function checkGameOver() {
+    for (let i = 0; i < boardSize; i++) {
+      for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] === 0) {
+          return false;
+        }
+        if ((i > 0 && board[i][j] === board[i - 1][j]) || 
+            (j > 0 && board[i][j] === board[i][j - 1])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   function moveTiles(direction) {
     let moved = false;
     switch (direction) {
@@ -123,6 +169,7 @@
               if (k > 0 && board[k - 1][j] === board[k][j]) {
                 board[k - 1][j] *= 2;
                 board[k][j] = 0;
+                updateScore(board[k - 1][j]);
                 moved = true;
               }
             }
@@ -143,6 +190,7 @@
               if (k < boardSize - 1 && board[k + 1][j] === board[k][j]) {
                 board[k + 1][j] *= 2;
                 board[k][j] = 0;
+                updateScore(board[k + 1][j]);
                 moved = true;
               }
             }
@@ -163,6 +211,7 @@
               if (k > 0 && board[i][k - 1] === board[i][k]) {
                 board[i][k - 1] *= 2;
                 board[i][k] = 0;
+                updateScore(board[i][k - 1]);
                 moved = true;
               }
             }
@@ -183,6 +232,7 @@
               if (k < boardSize - 1 && board[i][k + 1] === board[i][k]) {
                 board[i][k + 1] *= 2;
                 board[i][k] = 0;
+                updateScore(board[i][k + 1]);
                 moved = true;
               }
             }
@@ -192,11 +242,17 @@
     }
     if (moved) {
       addRandomTile();
+      if (checkGameOver()) {
+        alert('Game Over');
+        updateBestScore();
+        score = 0;
+        document.getElementById('score').textContent = 'Score: 0';
+        initializeBoard();
+      }
     }
     renderBoard();
   }
 
-  // Handle key press events
   document.addEventListener('keydown', (event) => {
     switch (event.key) {
       case 'ArrowUp':
@@ -214,7 +270,12 @@
     }
   });
 
-  // Start the game
+  document.getElementById('reset-button').addEventListener('click', () => {
+    score = 0;
+    document.getElementById('score').textContent = 'Score: 0';
+    initializeBoard();
+  });
+
   initializeBoard();
 </script>
 
