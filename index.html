@@ -64,6 +64,41 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
+    .popup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    }
+
+    .popup-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    border-radius: 10px;
+    }
+
+    .close-popup {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    }
+
+    .close-popup:hover,
+    .close-popup:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
@@ -73,6 +108,12 @@
 <div id="move-count">Move Count: 0</div>
 <button id="reset-button">Reset Game</button>
 <div class="game-container" id="game-board"></div>
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <span id="close-popup" class="close-popup">&times;</span>
+    <p id="popup-message"></p>
+  </div>
+</div>
 
 <script>
   const boardSize = 4;
@@ -81,22 +122,29 @@
   let score = 0;
   let bestScore = localStorage.getItem('bestScore') || 0;
   let moveCount = 0;
+  let stepCount = 0; // 添加一个变量来跟踪玩家的步数
+  const obstacleRounds = []; // 添加一个新的二维数组来跟踪障碍物的剩余回合数
+
 
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
 
-  function initializeBoard() {
+    function initializeBoard() {
     for (let i = 0; i < boardSize; i++) {
-      board[i] = [];
-      for (let j = 0; j < boardSize; j++) {
+        board[i] = [];
+        obstacleRounds[i] = []; // 初始化障碍物剩余回合数数组
+        for (let j = 0; j < boardSize; j++) {
         board[i][j] = 0;
-      }
+        obstacleRounds[i][j] = 0; // 初始化障碍物剩余回合数为0
+        }
     }
     moveCount = 0;
+    stepCount = 0;
     document.getElementById('move-count').textContent = 'Move Count: 0';
     addRandomTile();
     addRandomTile();
     renderBoard();
-  }
+    }
+
 
   function addRandomTile() {
     const emptyCells = [];
@@ -245,19 +293,27 @@
         break;
     }
     if (moved) {
-      moveCount++;
-      document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
-      addRandomTile();
-      if (checkGameOver()) {
+    moveCount++;
+    stepCount++;
+    document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
+    updateObstacleRounds(); // 更新障碍物剩余回合数
+    if (stepCount % 15 === 0) {
+        triggerRandomEffect();
+    }
+    addRandomTile();
+    if (checkGameOver()) {
         alert('Game Over');
         updateBestScore();
         score = 0;
         moveCount = 0;
+        stepCount = 0;
         document.getElementById('score').textContent = 'Score: 0';
         document.getElementById('move-count').textContent = 'Move Count: 0';
         initializeBoard();
-      }
     }
+    }
+
+
     renderBoard();
   }
 
@@ -287,6 +343,95 @@
   });
 
   initializeBoard();
+//随机事件生成
+    function triggerRandomEffect() {
+    const effect = Math.floor(Math.random() * 3); // 生成一个0到2之间的随机数
+    switch (effect) {
+        case 0:
+        showPopup('特殊事件！', '障碍物出现了！');
+        addObstacle();
+        break;
+        case 1:
+        showPopup('特殊事件！', '只保留了最高值的方块！');
+        keepHighestValue();
+        break;
+        case 2:
+        showPopup('特殊事件！', '空位已填充！');
+        fillEmptyCells();
+        break;
+    }
+    }
+
+    //弹窗
+    function showPopup(title, message) {
+    document.getElementById('popup-message').innerHTML = `<strong>${title}</strong><br>${message}`;
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('close-popup').addEventListener('click', () => {
+        document.getElementById('popup').style.display = 'none';
+    });
+    }
+
+
+    //第一个随机事件
+    // 1. 障碍物出现• 效果描述：棋盘上随机出现一个无法合成的“X”数字方块。该方块会占据一个格子，且在5回合后自动消失。• 持续时间：5回合后自动消失。
+    function addObstacle() {
+    const emptyCells = [];
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] === 0) {
+            emptyCells.push({ row: i, col: j });
+        }
+        }
+    }
+    if (emptyCells.length > 0) {
+        const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        board[randomCell.row][randomCell.col] = 'X';
+    }
+    }
+
+    function updateObstacleRounds() {
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] === 'X') {
+            obstacleRounds[i][j]--;
+            if (obstacleRounds[i][j] === 0) {
+            board[i][j] = 0; // 移除障碍物
+            }
+        }
+        }
+    }
+    }
+
+    //第二个随机事件
+    //2. 保留最高值• 效果描述：棋盘上只保留数值最高的一个方块，其余所有方块均被清除。如果存在多个相同最高值的方块，随机保留其中一个。• 持续时间：仅在该回合生效。
+    function keepHighestValue() {
+    let highestValue = 0;
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] > highestValue) {
+            highestValue = board[i][j];
+        }
+        }
+    }
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] !== highestValue) {
+            board[i][j] = 0;
+        }
+        }
+    }
+    }
+    //第三个随机事件
+    //3. 空位填充• 效果描述：棋盘上所有空余的位置都将被自动填充为2。如果棋盘上没有空位，则该效果不生效。• 持续时间：仅在该回合生效。
+    function fillEmptyCells() {
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+        if (board[i][j] === 0) {
+            board[i][j] = 2;
+        }
+        }
+    }
+    }
 </script>
 
 </body>
