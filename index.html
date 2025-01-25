@@ -15,7 +15,7 @@
       margin: 0;
       flex-direction: column;
     }
-    #score, #best-score {
+    #score, #best-score, #move-count {
       font-size: 24px;
       margin-bottom: 10px;
     }
@@ -70,6 +70,7 @@
 
 <div id="score">Score: 0</div>
 <div id="best-score">Best Score: 0</div>
+<div id="move-count">Move Count: 0</div>
 <button id="reset-button">Reset Game</button>
 <div class="game-container" id="game-board"></div>
 
@@ -79,6 +80,7 @@
   const gameBoard = document.getElementById('game-board');
   let score = 0;
   let bestScore = localStorage.getItem('bestScore') || 0;
+  let moveCount = 0;
 
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
 
@@ -89,6 +91,8 @@
         board[i][j] = 0;
       }
     }
+    moveCount = 0;
+    document.getElementById('move-count').textContent = 'Move Count: 0';
     addRandomTile();
     addRandomTile();
     renderBoard();
@@ -241,12 +245,16 @@
         break;
     }
     if (moved) {
+      moveCount++;
+      document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
       addRandomTile();
       if (checkGameOver()) {
         alert('Game Over');
         updateBestScore();
         score = 0;
+        moveCount = 0;
         document.getElementById('score').textContent = 'Score: 0';
+        document.getElementById('move-count').textContent = 'Move Count: 0';
         initializeBoard();
       }
     }
@@ -272,7 +280,9 @@
 
   document.getElementById('reset-button').addEventListener('click', () => {
     score = 0;
+    moveCount = 0;
     document.getElementById('score').textContent = 'Score: 0';
+    document.getElementById('move-count').textContent = 'Move Count: 0';
     initializeBoard();
   });
 
