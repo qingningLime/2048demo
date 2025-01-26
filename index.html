@@ -123,7 +123,7 @@
   let bestScore = localStorage.getItem('bestScore') || 0;
   let moveCount = 0;
   let stepCount = 0; // 添加一个变量来跟踪玩家的步数
-  const obstacleRounds = []; // 添加一个新的二维数组来跟踪障碍物的剩余回合数
+  let obstacleRounds = 5; // 添加一个一个变量来跟踪障碍物剩余回合数
 
 
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
@@ -131,10 +131,10 @@
     function initializeBoard() {
     for (let i = 0; i < boardSize; i++) {
         board[i] = [];
-        obstacleRounds[i] = []; // 初始化障碍物剩余回合数数组
+        // obstacleRounds[i] = []; // 初始化障碍物剩余回合数数组
         for (let j = 0; j < boardSize; j++) {
         board[i][j] = 0;
-        obstacleRounds[i][j] = 0; // 初始化障碍物剩余回合数为0
+        // obstacleRounds[i][j] = 0; // 初始化障碍物剩余回合数为0
         }
     }
     moveCount = 0;
@@ -203,6 +203,7 @@
     }
     return true;
   }
+
 
   function moveTiles(direction) {
     let moved = false;
@@ -386,6 +387,8 @@
     if (emptyCells.length > 0) {
         const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
         board[randomCell.row][randomCell.col] = 'X';
+        //定义一个函数存储障碍物剩余回合
+        obstacleRounds = 5;
     }
     }
 
@@ -393,8 +396,8 @@
     for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
         if (board[i][j] === 'X') {
-            obstacleRounds[i][j]--;
-            if (obstacleRounds[i][j] === 0) {
+            obstacleRounds--;
+            if (obstacleRounds === 0) {
             board[i][j] = 0; // 移除障碍物
             }
         }
