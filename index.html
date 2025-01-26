@@ -15,6 +15,7 @@
       background-color: #f2f2f2;
       margin: 0;
       flex-direction: column;
+      overflow-y: hidden;
     }
     #score, #best-score, #move-count {
       font-size: 24px;
@@ -168,6 +169,43 @@
   let frozenTiles = []; // 添加一个数组来存储冻结的方块
   let freezeDuration = 0; // 添加一个变量来跟踪冻结状态的持续时间
   let randomRoundStep = 20;
+
+
+
+    //触控屏支持
+    // 添加触控支持
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    document.addEventListener('touchstart', (event) => {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    });
+
+    document.addEventListener('touchend', (event) => {
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (deltaX > 0) {
+        moveTiles('right');
+        } else {
+        moveTiles('left');
+        }
+    } else {
+        // Vertical swipe
+        if (deltaY > 0) {
+        moveTiles('down');
+        } else {
+        moveTiles('up');
+        }
+    }
+    });
+
+    
 
 
   // 添加一个函数来显示弹出窗口
