@@ -29,8 +29,9 @@
       grid-template-rows: repeat(4, 1fr);
       gap: 10px;
       padding: 10px;
-      position: relative;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+
     .tile {
       background-color: #ccc0b4;
       border-radius: 10px;
@@ -40,7 +41,7 @@
       font-size: 36px;
       font-weight: bold;
       color: #776e65;
-      transition: transform 0.2s ease-in-out;
+      transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
     }
     .tile-2 { background-color: #eee4da; }
     .tile-4 { background-color: #ede0c8; }
@@ -64,6 +65,23 @@
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
     }
+
+    button {
+      background-color: #8f7a66;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #9e8b76;
+    }
+
+
     .popup {
     display: none;
     position: fixed;
