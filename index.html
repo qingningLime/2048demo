@@ -154,6 +154,7 @@
   let isPopupVisible = false;// 添加一个变量来跟踪弹出窗口是否可见
   let frozenTiles = []; // 添加一个数组来存储冻结的方块
   let freezeDuration = 0; // 添加一个变量来跟踪冻结状态的持续时间
+  let randomRoundStep = 20;
 
 
   // 添加一个函数来显示弹出窗口
@@ -334,7 +335,7 @@
             stepCount++;
             document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
             updateObstacleRounds(); // 更新障碍物剩余回合数
-            if (stepCount % 20 === 0) {//决定回合数
+            if (stepCount - randomRoundStep === 0) {//决定回合数
                 triggerRandomEffect();
             }
             if (freezeDuration > 0) {
@@ -396,7 +397,7 @@
   initializeBoard();
 //随机事件生成
     function triggerRandomEffect() {
-        const effect = Math.floor(Math.random() * 10); // 生成一个0到3之间的随机数
+        const effect = Math.floor(Math.random() * 10); 
         switch (effect) {
             case 0:
             showPopup('特殊事件！', '障碍物出现了！');
@@ -439,6 +440,9 @@
             randomShuffle();
             break
         }
+        //把randomRoundStep修改为8到25的任意数
+        randomRoundStep = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
+        randomRoundStep+=stepCount;
     }
 
     // //随机增加或减少数字
