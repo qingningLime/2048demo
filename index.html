@@ -124,6 +124,8 @@
   let moveCount = 0;
   let stepCount = 0; // 添加一个变量来跟踪玩家的步数
   let obstacleRounds = 5; // 添加一个一个变量来跟踪障碍物剩余回合数
+  let isPopupVisible = false;// 添加一个变量来跟踪弹出窗口是否可见
+
 
 
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
@@ -317,23 +319,26 @@
 
     renderBoard();
   }
-
+  //获取键盘输入
   document.addEventListener('keydown', (event) => {
-    switch (event.key) {
-      case 'ArrowUp':
-        moveTiles('up');
-        break;
-      case 'ArrowDown':
-        moveTiles('down');
-        break;
-      case 'ArrowLeft':
-        moveTiles('left');
-        break;
-      case 'ArrowRight':
-        moveTiles('right');
-        break;
+      if (!isPopupVisible) {
+          switch (event.key) {
+              case 'ArrowUp':
+                  moveTiles('up');
+                  break;
+              case 'ArrowDown':
+                  moveTiles('down');
+                  break;
+              case 'ArrowLeft':
+                  moveTiles('left');
+                  break;
+              case 'ArrowRight':
+                  moveTiles('right');
+                  break;
+          }
+      }
     }
-  });
+  );
 
   document.getElementById('reset-button').addEventListener('click', () => {
     score = 0;
@@ -367,8 +372,10 @@
     function showPopup(title, message) {
     document.getElementById('popup-message').innerHTML = `<strong>${title}</strong><br>${message}`;
     document.getElementById('popup').style.display = 'block';
+    isPopupVisible = true;
     document.getElementById('close-popup').addEventListener('click', () => {
         document.getElementById('popup').style.display = 'none';
+        isPopupVisible = false;
     });
     }
 
@@ -433,7 +440,7 @@
             board[i][j] = 2;
         }
         }
-    }
+      }
     }
 </script>
 
