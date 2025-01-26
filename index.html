@@ -129,6 +129,19 @@
 </head>
 <body>
 <!-- body -->
+ <div id="rules-popup" class="popup">
+  <div class="popup-content">
+    <span id="close-rules-popup" class="close-popup">&times;</span>
+    <h2>游戏规则</h2>
+    <p>1. 使用键盘上的箭头键或awsd键来移动方块。</p>
+    <p>2. 当两个相同数字的方块相遇时，它们会合并成一个方块，其数字为这两个数字之和。</p>
+    <p>3. 每次移动都会在空白处随机生成一个新的数字方块。</p>
+    <p>4. 游戏目标是合并方块，直到达到2048。</p>
+    <p><strong style="color: red;">5. 特殊事件：在游戏过程中，可能会触发一些特殊事件，如障碍物出现、保留最高值、空位填充等。</strong></p>
+
+  </div>
+</div>
+
 <div id="score">Score: 0</div>
 <div id="best-score">Best Score: 0</div>
 <div id="move-count">Move Count: 0</div>
@@ -159,8 +172,15 @@
 
   // 添加一个函数来显示弹出窗口
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
+  document.getElementById('close-rules-popup').addEventListener('click', () => {
+    document.getElementById('rules-popup').style.display = 'none';
+    isPopupVisible = false;
+  });
+
   // 添加一个函数来初始化游戏板
     function initializeBoard() {
+    document.getElementById('rules-popup').style.display = 'block';
+    isPopupVisible = true;
     for (let i = 0; i < boardSize; i++) {
         board[i] = [];
         // obstacleRounds[i] = []; // 初始化障碍物剩余回合数数组
@@ -356,6 +376,7 @@
                 score = 0;
                 moveCount = 0;
                 stepCount = 0;
+                randomRoundStep =20;
                 document.getElementById('score').textContent = 'Score: 0';
                 document.getElementById('move-count').textContent = 'Move Count: 0';
                 initializeBoard();
@@ -366,29 +387,34 @@
 
 
   //获取键盘输入
-  document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', (event) => {
       if (!isPopupVisible) {
-          switch (event.key) {
-              case 'ArrowUp':
-                  moveTiles('up');
-                  break;
-              case 'ArrowDown':
-                  moveTiles('down');
-                  break;
-              case 'ArrowLeft':
-                  moveTiles('left');
-                  break;
-              case 'ArrowRight':
-                  moveTiles('right');
-                  break;
-          }
+        switch (event.key) {
+          case 'ArrowUp':
+          case 'w':
+            moveTiles('up');
+            break;
+          case 'ArrowDown':
+          case 's':
+            moveTiles('down');
+            break;
+          case 'ArrowLeft':
+          case 'a':
+            moveTiles('left');
+            break;
+          case 'ArrowRight':
+          case 'd':
+            moveTiles('right');
+            break;
+        }
       }
-    }
-  );
+    });
+
 
   document.getElementById('reset-button').addEventListener('click', () => {
     score = 0;
     moveCount = 0;
+    randomRoundStep =20;
     document.getElementById('score').textContent = 'Score: 0';
     document.getElementById('move-count').textContent = 'Move Count: 0';
     initializeBoard();
@@ -436,9 +462,9 @@
             randomGenerateHighestTile();
             break
             case 9:
-            showPopup('特殊事件！', '重新排列棋盘！');
-            randomShuffle();
-            break
+            showPopup('特殊事件！', '随机数字倍增行或列！');
+            randomDoubleRowOrColumn();
+            break;
         }
         //把randomRoundStep修改为8到25的任意数
         randomRoundStep = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
@@ -658,32 +684,28 @@
     }
 
     //第十个随机事件
-    //随机混乱• 效果描述：棋盘上的所有方块随机重新排列。• 持续时间：仅在该回合生效。
-    function randomShuffle() {
-        const cells = [];
-        for (let i = 0; i < boardSize; i++) {
+    //随机数字倍增行或列• 效果描述：随机选择棋盘上的一行或一列，该行或列的所有方块数值翻倍。• 持续时间：仅在该回合生效
+    function randomDoubleRowOrColumn() {
+        const randomRow = Math.floor(Math.random() * boardSize);
+        const randomColumn = Math.floor(Math.random() * boardSize);
+        const randomDirection = Math.random() > 0.5 ? 'row' : 'column';
+
+        if (randomDirection === 'row') {
             for (let j = 0; j < boardSize; j++) {
-                if (board[i][j] !== 0) {
-                    cells.push({ row: i, col: j, value: board[i][j] });
-                    board[i][j] = 0;
+                if (board[randomRow][j] !== 0) {
+                    board[randomRow][j] *= 2;
+                }
+            }
+        } else { // column
+            for (let i = 0; i < boardSize; i++) {
+                if (board[i][randomColumn] !== 0) {
+                    board[i][randomColumn] *= 2;
                 }
             }
         }
 
-        // 随机打乱数组
-        for (let i = cells.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cells[i], cells[j]] = [cells[j], cells[i]];
-        }
-
-        // 将方块重新放置到棋盘上
-        for (let i = 0; i < cells.length; i++) {
-            const { row, col, value } = cells[i];
-            board[row][col] = value;
-        }
         renderBoard();
-      }
-
+    }
 
 
 
