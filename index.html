@@ -334,7 +334,7 @@
             stepCount++;
             document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
             updateObstacleRounds(); // 更新障碍物剩余回合数
-            if (stepCount % 15 === 0) {
+            if (stepCount % 20 === 0) {//决定回合数
                 triggerRandomEffect();
             }
             if (freezeDuration > 0) {
