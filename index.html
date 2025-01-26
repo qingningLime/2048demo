@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2048 Game</title>
+  <!-- css -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -43,6 +44,7 @@
       color: #776e65;
       transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
     }
+    .tile-x { background-color: #19df54; }
     .tile-2 { background-color: #eee4da; }
     .tile-4 { background-color: #ede0c8; }
     .tile-8 { background-color: #f2b179; }
@@ -117,10 +119,16 @@
     cursor: pointer;
     }
 
+    .frozen {
+        background-color: #1e69be; /* 灰色背景 */
+        color: #a9a9a9; /* 灰色文字 */
+    }
+
+
   </style>
 </head>
 <body>
-
+<!-- body -->
 <div id="score">Score: 0</div>
 <div id="best-score">Best Score: 0</div>
 <div id="move-count">Move Count: 0</div>
@@ -134,6 +142,7 @@
 </div>
 
 <script>
+  //前置函数
   const boardSize = 4;
   const board = [];
   const gameBoard = document.getElementById('game-board');
@@ -143,11 +152,13 @@
   let stepCount = 0; // 添加一个变量来跟踪玩家的步数
   let obstacleRounds = 5; // 添加一个一个变量来跟踪障碍物剩余回合数
   let isPopupVisible = false;// 添加一个变量来跟踪弹出窗口是否可见
+  let frozenTiles = []; // 添加一个数组来存储冻结的方块
+  let freezeDuration = 0; // 添加一个变量来跟踪冻结状态的持续时间
 
 
-
+  // 添加一个函数来显示弹出窗口
   document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
-
+  // 添加一个函数来初始化游戏板
     function initializeBoard() {
     for (let i = 0; i < boardSize; i++) {
         board[i] = [];
@@ -165,7 +176,7 @@
     renderBoard();
     }
 
-
+  // 添加一个函数来添加随机方块
   function addRandomTile() {
     const emptyCells = [];
     for (let i = 0; i < boardSize; i++) {
@@ -180,7 +191,7 @@
       board[randomCell.row][randomCell.col] = Math.random() > 0.9 ? 4 : 2;
     }
   }
-
+  // 添加一个函数来渲染游戏板
   function renderBoard() {
     gameBoard.innerHTML = '';
     for (let i = 0; i < boardSize; i++) {
@@ -195,12 +206,12 @@
       }
     }
   }
-
+  // 添加一个函数来更新得分
   function updateScore(amount) {
     score += amount;
     document.getElementById('score').textContent = `Score: ${score}`;
   }
-
+  // 添加一个函数来更新最佳得分
   function updateBestScore() {
     if (score > bestScore) {
       bestScore = score;
@@ -208,7 +219,7 @@
       document.getElementById('best-score').textContent = `Best Score: ${bestScore}`;
     }
   }
-
+  // 添加一个函数来检查游戏是否结束
   function checkGameOver() {
     for (let i = 0; i < boardSize; i++) {
       for (let j = 0; j < boardSize; j++) {
@@ -224,7 +235,7 @@
     return true;
   }
 
-
+  // 添加一个函数来检查是否达到胜利条件
   function moveTiles(direction) {
     let moved = false;
     switch (direction) {
@@ -321,7 +332,27 @@
     if (stepCount % 15 === 0) {
         triggerRandomEffect();
     }
-    addRandomTile();
+    // 检查 freezeDuration 是否大于 0
+    if (freezeDuration > 0) {
+        // 减少 freezeDuration 的值
+        freezeDuration--;
+        // 检查 freezeDuration 是否等于 0
+        if (freezeDuration === 0) {
+            // 遍历 frozenTiles 数组中的每一个元素
+            frozenTiles.forEach(frozenTile => {
+                // 将 frozenTile 字符串按逗号分割并转换为数字
+                const [row, col] = frozenTile.split(',').map(Number);
+                // 使用 CSS 选择器找到对应的 tile 元素
+                const tile = document.querySelector(`.tile:nth-child(${row * boardSize + col + 1})`);
+                // 移除 tile 元素的 'frozen' 类
+                tile.classList.remove('frozen');
+            });
+            // 清空 frozenTiles 数组
+            frozenTiles = [];
+        }
+    }
+    // 调用 addRandomTile 函数，添加一个随机的新 tile
+    addRandomTile();    
     if (checkGameOver()) {
         alert('Game Over');
         updateBestScore();
@@ -369,22 +400,58 @@
   initializeBoard();
 //随机事件生成
     function triggerRandomEffect() {
-    const effect = Math.floor(Math.random() * 3); // 生成一个0到2之间的随机数
-    switch (effect) {
-        case 0:
-        showPopup('特殊事件！', '障碍物出现了！');
-        addObstacle();
-        break;
-        case 1:
-        showPopup('特殊事件！', '只保留了最高值的方块！');
-        keepHighestValue();
-        break;
-        case 2:
-        showPopup('特殊事件！', '空位已填充！');
-        fillEmptyCells();
-        break;
+        const effect = Math.floor(Math.random() * 7); // 生成一个0到3之间的随机数
+        switch (effect) {
+            case 0:
+            showPopup('特殊事件！', '障碍物出现了！');
+            addObstacle();
+            break;
+            case 1:
+            showPopup('特殊事件！', '只保留了最高值的方块！');
+            keepHighestValue();
+            break;
+            case 2:
+            showPopup('特殊事件！', '空位已填充！');
+            fillEmptyCells();
+            break;
+            case 3:
+            showPopup('特殊事件！', '棋盘反转了！');
+            reverseBoard();
+            break;
+            case 4:
+            showPopup('特殊事件！', '数字随机合并了！');
+            randomMerge();
+            break;
+            case 5:
+            showPopup('特殊事件！', '数字随机增加或减少了！');
+            randomIncreaseDecrease();
+            break;
+            case 6:
+            showPopup('特殊事件！', '数字随机冻结了！');
+            freezeRandomTile();
+            break;
+            
+        }
     }
-    }
+
+    // //随机增加或减少数字
+    // function randomIncreaseDecrease() {
+    //     for (let i = 0; i < boardSize; i++) {
+    //         for (let j = 0; j < boardSize; j++) {
+    //             if (board[i][j] !== 0) {
+    //                 const random = Math.random();
+    //                 if (random < 0.5) {
+    //                     board[i][j] += 1;
+    //                 } else {
+    //                     board[i][j] -= 1;
+    //                 }
+    //             }
+    //         }
+            
+    //     }
+    // }
+
+
 
     //弹窗
     function showPopup(title, message) {
@@ -416,7 +483,6 @@
         obstacleRounds = 5;
     }
     }
-
     function updateObstacleRounds() {
     for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
@@ -460,6 +526,78 @@
         }
       }
     }
+
+    //第四个随机事件
+    //4. 随机反转棋盘• 效果描述：棋盘的行或列随机反转。例如，如果行反转，原本从左到右的顺序会变成从右到左；如果列反转，原本从上到下的顺序会变成从下到上。• 持续时间：仅在该回合生效。
+    function reverseBoard() {
+        const reverseRows = Math.random() > 0.5;
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < Math.floor(boardSize / 2); j++) {
+                if (reverseRows) {
+                    [board[i][j], board[i][boardSize - 1 - j]] = [board[i][boardSize - 1 - j], board[i][j]];
+                } else {
+                    [board[j][i], board[boardSize - 1 - j][i]] = [board[boardSize - 1 - j][i], board[j][i]];
+                }
+            }
+        }
+        renderBoard();
+    }
+    //第五个随机事件
+    //5. 随机合并• 效果描述：棋盘上的所有相同数字方块随机合并一次。例如，如果棋盘上有两个4，它们可能会随机合并成一个8。• 持续时间：仅在该回合生效。
+    function randomMerge() {
+        const cells = [];
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                if (board[i][j] !== 0) {
+                    cells.push({ row: i, col: j, value: board[i][j] });
+                }
+            }
+        }
+        if (cells.length < 2) {
+            return;
+        }
+        const randomCell1 = cells[Math.floor(Math.random() * cells.length)];
+        const randomCell2 = cells[Math.floor(Math.random() * cells.length)];
+        board[randomCell1.row][randomCell1.col] *= 2;
+        board[randomCell2.row][randomCell2.col] = 0;
+        renderBoard();
+    }
+    //第六个随机事件
+    //6. 随机增加数字• 效果描述：棋盘上的所有数字随机增加或减少一个随机值。例如，如果棋盘上的数字是4，它可能会变成2或8,比如键盘上是64，它可能会变成32或128，以此类推• 持续时间：仅在该回合生效。
+    function randomIncreaseDecrease() {
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                if (board[i][j] !== 0 ||board[i][j] !== 2) {
+                    const randomChange = Math.random() > 0.5 ? 2 : 0.5;
+                    board[i][j] *= randomChange;
+                }
+            }
+        }
+        renderBoard();
+    }
+    //第七个随机事件
+    //随机冻结• 效果描述：随机选择一个方块并将其冻结，冻结的方块在5回合内无法移动或合并。• 持续时间：5回合后解除冻结。
+    function freezeRandomTile() {
+        const emptyCells = [];
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                if (board[i][j] !== 0 && !frozenTiles.includes(`${i},${j}`)) {
+                    emptyCells.push({ row: i, col: j });
+                }
+            }
+        }
+        if (emptyCells.length > 0) {
+            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            frozenTiles.push(`${randomCell.row},${randomCell.col}`);
+            const tile = document.querySelector(`.tile:nth-child(${randomCell.row * boardSize + randomCell.col + 1})`);
+            tile.classList.add('frozen');
+            freezeDuration = 5; // 设置冻结状态的持续时间为5回合
+        }
+    }
+    
+
+
+
 </script>
 
 </body>
