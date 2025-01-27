@@ -426,9 +426,12 @@
                 moveCount = 0;
                 stepCount = 0;
                 randomRoundStep =20;
+                AfterRandomRoundStep=randomRoundStep
                 document.getElementById('score').textContent = 'Score: 0';
                 document.getElementById('move-count').textContent = 'Move Count: 0';
+                document.getElementById('next-random-event').textContent = 'Next Random Event in: 20 rounds';
                 initializeBoard();
+
             }
         }
         renderBoard();
