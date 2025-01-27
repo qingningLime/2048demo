@@ -1,4 +1,4 @@
-<!-- 这是1.0版本，已经实现既定功能，我希望后续添加功能时可以进行回退 -->
+<!-- 这是2.0版本，已经实现既定功能，我希望后续添加功能时可以进行回退 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -180,10 +180,8 @@
 </div>
 <div id="buff-popup" class="popup">
     <div class="popup-content">
-      <span id="close-buff-popup" class="close-popup">&times;</span>
       <h2>选择buff</h2>
       <ul id="buff-list" class="buff-cards"></ul>
-      <button id="confirm-buff">确认</button>
     </div>
 </div>
 
@@ -218,7 +216,11 @@
     const touchEndY = event.changedTouches[0].clientY;
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
-    
+    // 检查是否是点击事件
+    if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+        // 点击事件，不执行滑动操作
+        return;
+    }
     //触控屏支持
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Horizontal swipe
@@ -238,6 +240,7 @@
         moveTiles('up');
         }
     }
+
     });
 
     
@@ -470,6 +473,14 @@
 
   //获取键盘输入
     document.addEventListener('keydown', (event) => {
+    //     const touchEndX = event.changedTouches[0].clientX;
+    //     const touchEndY = event.changedTouches[0].clientY;
+    //     const deltaX = touchEndX - touchStartX;
+    //     const deltaY = touchEndY - touchStartY;
+    //   if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+    //     // 点击事件，不执行滑动操作
+    //     return;
+    //     }
       if (!isPopupVisible) {
         switch (event.key) {
           case 'ArrowUp':
@@ -549,24 +560,13 @@
                 AfterRandomRoundStep=randomRoundStep
                 stepCount+=1;
                 randomRoundStep+=stepCount;
+                renderBoard();
                 // 更新触发特殊事件的回合数
                 document.getElementById('next-random-event').textContent = `Next Random Event in: ${AfterRandomRoundStep} rounds`;
                 isPopupVisible = false;
             });
 
             buffList.appendChild(buffCard);
-        });
-
-        // 添加确认按钮的逻辑
-        document.getElementById('confirm-buff').addEventListener('click', () => {
-            document.getElementById('buff-popup').style.display = 'none';
-            isPopupVisible = false;
-        });
-
-        // 添加关闭buff选择界面的逻辑
-        document.getElementById('close-buff-popup').addEventListener('click', () => {
-            document.getElementById('buff-popup').style.display = 'none';
-            isPopupVisible = false;
         });
     }
     //弹窗
