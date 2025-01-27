@@ -188,19 +188,23 @@
     const touchEndY = event.changedTouches[0].clientY;
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
-
+    
+    //触控屏支持
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Horizontal swipe
         if (deltaX > 0) {
         moveTiles('right');
-        } else {
+        } 
+        else {
         moveTiles('left');
         }
-    } else {
+    } 
+    else {
         // Vertical swipe
         if (deltaY > 0) {
         moveTiles('down');
-        } else {
+        }
+        else {
         moveTiles('up');
         }
     }
@@ -455,7 +459,7 @@
       }
     });
 
-
+    //重新开始
   document.getElementById('reset-button').addEventListener('click', () => {
     score = 0;
     moveCount = 0;
