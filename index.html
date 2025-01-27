@@ -146,6 +146,7 @@
 <div id="score">Score: 0</div>
 <div id="best-score">Best Score: 0</div>
 <div id="move-count">Move Count: 0</div>
+<div id="next-random-event">Next Random Event in: 20 rounds</div>
 <button id="reset-button">Reset Game</button>
 <div class="game-container" id="game-board"></div>
 <div id="popup" class="popup">
@@ -168,9 +169,8 @@
   let isPopupVisible = false;// 添加一个变量来跟踪弹出窗口是否可见
   let frozenTiles = []; // 添加一个数组来存储冻结的方块
   let freezeDuration = 0; // 添加一个变量来跟踪冻结状态的持续时间
-  let randomRoundStep = 20;
-
-
+  let randomRoundStep = 20;//触发特殊事件的回合数
+  let AfterRandomRoundStep = 20;//距离特殊事件还剩的回合数
 
     //触控屏支持
     // 添加触控支持
@@ -288,10 +288,14 @@
         for (let j = 0; j < boardSize; j++) {
           if (board[i][j] === 0) {
             return false;
+            randomRoundStep=20;
+            AfterRandomRoundStep=randomRoundStep;
           }
           if ((i > 0 && board[i][j] === board[i - 1][j]) || 
               (j > 0 && board[i][j] === board[i][j - 1])) {
             return false;
+            randomRoundStep=20;
+            AfterRandomRoundStep=randomRoundStep;
           }
         }
       }
@@ -391,6 +395,8 @@
         if (moved) {
             moveCount++;
             stepCount++;
+            AfterRandomRoundStep--;
+            document.getElementById('next-random-event').textContent = `Next Random Event in: ${AfterRandomRoundStep} rounds`;
             document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
             updateObstacleRounds(); // 更新障碍物剩余回合数
             if (stepCount - randomRoundStep === 0) {//决定回合数
@@ -452,16 +458,18 @@
   document.getElementById('reset-button').addEventListener('click', () => {
     score = 0;
     moveCount = 0;
-    randomRoundStep =20;
+    randomRoundStep=20;
+    AfterRandomRoundStep=randomRoundStep;
     document.getElementById('score').textContent = 'Score: 0';
     document.getElementById('move-count').textContent = 'Move Count: 0';
+    document.getElementById('next-random-event').textContent = 'Next Random Event in: 20 rounds';
     initializeBoard();
   });
 
   initializeBoard();
 //随机事件生成
     function triggerRandomEffect() {
-        const effect = Math.floor(Math.random() * 10); 
+        const effect = Math.floor(Math.random() * 12); 
         switch (effect) {
             case 0:
             showPopup('特殊事件！', '障碍物出现了！');
@@ -503,10 +511,25 @@
             showPopup('特殊事件！', '随机数字倍增行或列！');
             randomDoubleRowOrColumn();
             break;
+            case 10:
+            showPopup('特殊事件！', '随机消除某一行或某一列！');
+            randomRemoveRowOrColumnDelete();
+            break;
+            case 11:
+            showPopup('特殊事件！', '随机消除一个数字方块！');
+            randomRemoveSingleTile();
+            break;
+            // case 12:
+            // showPopup('特殊事件！', '随机旋转棋盘！');
+            // rotateBoard();
+            // break;
         }
         //把randomRoundStep修改为8到25的任意数
         randomRoundStep = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
+        AfterRandomRoundStep=randomRoundStep
         randomRoundStep+=stepCount;
+        // 更新触发特殊事件的回合数
+        document.getElementById('next-random-event').textContent = `Next Random Event in: ${AfterRandomRoundStep} rounds`;
     }
 
     // //随机增加或减少数字
@@ -617,26 +640,33 @@
         }
         renderBoard();
     }
-    //第五个随机事件
-    //5. 随机合并• 效果描述：棋盘上的所有相同数字方块随机合并一次。例如，如果棋盘上有两个4，它们可能会随机合并成一个8。• 持续时间：仅在该回合生效。
+    // 第五个随机事件
+    // 5. 随机合并• 效果描述：棋盘上的所有相同数字方块随机合并一次。例如，如果棋盘上有两个4，它们可能会随机合并成一个8。• 持续时间：仅在该回合生效。
     function randomMerge() {
-        const cells = [];
+        let merged = false;
         for (let i = 0; i < boardSize; i++) {
             for (let j = 0; j < boardSize; j++) {
                 if (board[i][j] !== 0) {
-                    cells.push({ row: i, col: j, value: board[i][j] });
+                    // 检查右边的方块
+                    if (j < boardSize - 1 && board[i][j] === board[i][j + 1]) {
+                        board[i][j] *= 2;
+                        board[i][j + 1] = 0;
+                        merged = true;
+                    }
+                    // 检查下边的方块
+                    else if (i < boardSize - 1 && board[i][j] === board[i + 1][j]) {
+                        board[i][j] *= 2;
+                        board[i + 1][j] = 0;
+                        merged = true;
+                    }
                 }
             }
         }
-        if (cells.length < 2) {
-            return;
+        if (merged) {
+            renderBoard();
         }
-        const randomCell1 = cells[Math.floor(Math.random() * cells.length)];
-        const randomCell2 = cells[Math.floor(Math.random() * cells.length)];
-        board[randomCell1.row][randomCell1.col] *= 2;
-        board[randomCell2.row][randomCell2.col] = 0;
-        renderBoard();
     }
+
     //第六个随机事件
     //6. 随机增加数字• 效果描述：棋盘上的所有数字随机增加或减少一个随机值。例如，如果棋盘上的数字是4，它可能会变成2或8,比如键盘上是64，它可能会变成32或128，以此类推• 持续时间：仅在该回合生效。
     function randomIncreaseDecrease() {
@@ -744,8 +774,40 @@
 
         renderBoard();
     }
-
-
+    //第十一个随机事件
+    //随机消除行或列• 效果描述：随机选择棋盘上的一行或一列，该行或列的所有方块被消除。• 持续时间：仅在该回合生效。
+    function randomRemoveRowOrColumnDelete() {
+        const randomDirection = Math.random() > 0.5 ? 'row' : 'column';
+        const randomIndex = Math.floor(Math.random() * boardSize);
+        if (randomDirection === 'row') {
+            for (let j = 0; j < boardSize; j++) {
+                board[randomIndex][j] = 0;
+            }
+        } else { // column
+            for (let i = 0; i < boardSize; i++) {
+                board[i][randomIndex] = 0;
+            }
+        }
+        renderBoard();
+    }
+    // 第十二个随机事件
+    //随机消除• 效果描述：随机消除棋盘上的一个方块，无论其数值大小。• 持续时间：仅在该回合生效。
+    function randomRemoveSingleTile() {
+        const emptyCells = [];
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                if (board[i][j] !== 0) {
+                    emptyCells.push({ row: i, col: j });
+                }
+            }
+        }
+        if (emptyCells.length > 0) {
+            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            board[randomCell.row][randomCell.col] = 0;
+        }
+        renderBoard();
+    }
+    // 第十三个随机事件
 
 
 
