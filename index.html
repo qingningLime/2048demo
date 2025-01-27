@@ -126,6 +126,28 @@
     cursor: pointer;
     }
 
+    .buff-cards {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .buff-card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .buff-card:hover {
+        transform: scale(1.1);
+    }
+
+
 
   </style>
 </head>
@@ -155,6 +177,14 @@
     <span id="close-popup" class="close-popup">&times;</span>
     <p id="popup-message"></p>
   </div>
+</div>
+<div id="buff-popup" class="popup">
+    <div class="popup-content">
+      <span id="close-buff-popup" class="close-popup">&times;</span>
+      <h2>选择buff</h2>
+      <ul id="buff-list" class="buff-cards"></ul>
+      <button id="confirm-buff">确认</button>
+    </div>
 </div>
 
 <script>
@@ -405,7 +435,7 @@
             document.getElementById('move-count').textContent = `Move Count: ${moveCount}`;
             updateObstacleRounds(); // 更新障碍物剩余回合数
             if (stepCount - randomRoundStep === 0) {//决定回合数
-                triggerRandomEffect();
+                showBuffSelection();
             }
             if (freezeDuration > 0) {
                 freezeDuration--;
@@ -475,90 +505,70 @@
   });
 
   initializeBoard();
-//随机事件生成
-    function triggerRandomEffect() {
-        const effect = Math.floor(Math.random() * 12); 
-        switch (effect) {
-            case 0:
-            showPopup('特殊事件！', '障碍物出现了！');
-            addObstacle();
-            break;
-            case 1:
-            showPopup('特殊事件！', '只保留了最高值的方块！');
-            keepHighestValue();
-            break;
-            case 2:
-            showPopup('特殊事件！', '空位已填充！');
-            fillEmptyCells();
-            break;
-            case 3:
-            showPopup('特殊事件！', '棋盘反转了！');
-            reverseBoard();
-            break;
-            case 4:
-            showPopup('特殊事件！', '数字随机合并了！');
-            randomMerge();
-            break;
-            case 5:
-            showPopup('特殊事件！', '数字随机增加或减少了！');
-            randomIncreaseDecrease();
-            break;
-            case 6:
-            showPopup('特殊事件！', '数字随机冻结了！');
-            freezeRandomTile();
-            break;
-            case 7:
-            showPopup('特殊事件！', '数字随机消失了！');
-            randomRemoveTile();
-            break
-            case 8:
-            showPopup('特殊事件！', '多了一个最高数！');
-            randomGenerateHighestTile();
-            break
-            case 9:
-            showPopup('特殊事件！', '随机数字倍增行或列！');
-            randomDoubleRowOrColumn();
-            break;
-            case 10:
-            showPopup('特殊事件！', '随机消除某一行或某一列！');
-            randomRemoveRowOrColumnDelete();
-            break;
-            case 11:
-            showPopup('特殊事件！', '随机消除一个数字方块！');
-            randomRemoveSingleTile();
-            break;
-            // case 12:
-            // showPopup('特殊事件！', '随机旋转棋盘！');
-            // rotateBoard();
-            // break;
+    function showBuffSelection() {
+        document.getElementById('buff-popup').style.display = 'block';
+        isPopupVisible = true;
+        const buffList = document.getElementById('buff-list');
+        buffList.innerHTML = ''; // 清空buff列表
+
+        // 定义所有可能的buff
+        const buffs = [
+            { name: '障碍物出现', effect: addObstacle },
+            { name: '保留最高值', effect: keepHighestValue },
+            { name: '空位填充', effect: fillEmptyCells },
+            { name: '棋盘反转', effect: reverseBoard },
+            { name: '随机合并', effect: randomMerge },
+            { name: '随机增加或减少', effect: randomIncreaseDecrease },
+            { name: '随机冻结', effect: freezeRandomTile },
+            { name: '随机消除', effect: randomRemoveTile },
+            { name: '多一个最高数', effect: randomGenerateHighestTile },
+            { name: '随机数字倍增行或列', effect: randomDoubleRowOrColumn },
+            { name: '随机消除某一行或某一列', effect: randomRemoveRowOrColumnDelete },
+            { name: '随机消除一个数字方块', effect: randomRemoveSingleTile }
+        ];
+
+        // 生成3个随机buff选项
+        const selectedBuffs = [];
+        while (selectedBuffs.length < 3) {
+            const randomBuff = buffs[Math.floor(Math.random() * buffs.length)];
+            if (!selectedBuffs.includes(randomBuff)) {
+                selectedBuffs.push(randomBuff);
+            }
         }
-        //把randomRoundStep修改为8到25的任意数
-        randomRoundStep = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
-        AfterRandomRoundStep=randomRoundStep
-        randomRoundStep+=stepCount;
-        // 更新触发特殊事件的回合数
-        document.getElementById('next-random-event').textContent = `Next Random Event in: ${AfterRandomRoundStep} rounds`;
+
+        // 创建buff选项的UI
+        selectedBuffs.forEach((buff, index) => {
+            const buffCard = document.createElement('li');
+            buffCard.classList.add('buff-card');
+            buffCard.textContent = buff.name;
+            buffCard.dataset.index = index;
+            buffCard.addEventListener('click', () => {
+                buff.effect(); // 应用选择的buff
+                document.getElementById('buff-popup').style.display = 'none';
+                randomRoundStep = Math.floor(Math.random() * (25 - 8 + 1)) + 8;
+                AfterRandomRoundStep=randomRoundStep
+                stepCount+=1;
+                randomRoundStep+=stepCount;
+                // 更新触发特殊事件的回合数
+                document.getElementById('next-random-event').textContent = `Next Random Event in: ${AfterRandomRoundStep} rounds`;
+                isPopupVisible = false;
+            });
+
+            buffList.appendChild(buffCard);
+        });
+
+        // 添加确认按钮的逻辑
+        document.getElementById('confirm-buff').addEventListener('click', () => {
+            document.getElementById('buff-popup').style.display = 'none';
+            isPopupVisible = false;
+        });
+
+        // 添加关闭buff选择界面的逻辑
+        document.getElementById('close-buff-popup').addEventListener('click', () => {
+            document.getElementById('buff-popup').style.display = 'none';
+            isPopupVisible = false;
+        });
     }
-
-    // //随机增加或减少数字
-    // function randomIncreaseDecrease() {
-    //     for (let i = 0; i < boardSize; i++) {
-    //         for (let j = 0; j < boardSize; j++) {
-    //             if (board[i][j] !== 0) {
-    //                 const random = Math.random();
-    //                 if (random < 0.5) {
-    //                     board[i][j] += 1;
-    //                 } else {
-    //                     board[i][j] -= 1;
-    //                 }
-    //             }
-    //         }
-            
-    //     }
-    // }
-
-
-
     //弹窗
     function showPopup(title, message) {
     document.getElementById('popup-message').innerHTML = `<strong>${title}</strong><br>${message}`;
